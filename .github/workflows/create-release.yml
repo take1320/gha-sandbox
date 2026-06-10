@@ -38,7 +38,7 @@ jobs:
 
       - name: Create PR to main
         run: |
-          gh pr create \
+          if ! pr_create_output=$(gh pr create \
             --base main \
             --head ${{ inputs.release_branch }} \
             --title "[release] ${{ inputs.pr_title }}" \
@@ -47,6 +47,16 @@ jobs:
           - **元ブランチ:** \`${{ inputs.source_branch }}\`
           - **リリースブランチ:** \`${{ inputs.release_branch }}\`
           - **作成者:** @${{ github.actor }}
-          - **実行ワークフロー:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          - **実行ワークフロー:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" 2>&1); then
+            echo "$pr_create_output"
+            if echo "$pr_create_output" | grep -q "GitHub Actions is not permitted to create or approve pull requests"; then
+              echo "::warning::Skipping PR creation: the default GITHUB_TOKEN cannot create pull requests in this repository."
+              echo "::notice::Enable 'Allow GitHub Actions to create and approve pull requests' or set RELEASE_PR_TOKEN."
+              echo "::notice::Create PR manually: ${{ github.server_url }}/${{ github.repository }}/compare/main...${{ inputs.release_branch }}?expand=1"
+              exit 0
+            fi
+            exit 1
+          fi
+          echo "$pr_create_output"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PR_TOKEN || github.token }}
