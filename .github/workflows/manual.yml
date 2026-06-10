@@ -1,0 +1,49 @@
+name: Manual Run Sample
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'デプロイ先の環境'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      dry_run:
+        description: 'ドライランモード（実際の変更は行わない）'
+        required: false
+        default: true
+        type: boolean
+      message:
+        description: '実行時のメモ（任意）'
+        required: false
+        type: string
+
+jobs:
+  run:
+    name: Manual Job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show inputs
+        run: |
+          echo "環境:       ${{ inputs.environment }}"
+          echo "ドライラン: ${{ inputs.dry_run }}"
+          echo "メモ:       ${{ inputs.message || '(なし)' }}"
+
+      - name: Run (dry-run)
+        if: inputs.dry_run == true
+        run: echo "[DRY RUN] ${{ inputs.environment }} へのデプロイをシミュレートします"
+
+      - name: Run (production)
+        if: inputs.dry_run == false && inputs.environment == 'production'
+        run: echo "本番環境へデプロイします"
+
+      - name: Run (staging)
+        if: inputs.dry_run == false && inputs.environment == 'staging'
+        run: echo "ステージング環境へデプロイします"
