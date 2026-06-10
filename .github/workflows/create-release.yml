@@ -3,10 +3,6 @@ name: Create Release Branch and PR
 on:
   workflow_dispatch:
     inputs:
-      source_branch:
-        description: 'リリースの元になるブランチ'
-        required: true
-        type: string
       release_branch:
         description: 'リリースブランチ名 (例: release/1.0.0)'
         required: true
@@ -28,7 +24,7 @@ jobs:
       - name: Checkout source branch
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.source_branch }}
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Create release branch
@@ -44,7 +40,7 @@ jobs:
             --title "[release] ${{ inputs.pr_title }}" \
             --body "## Release PR
 
-          - **元ブランチ:** \`${{ inputs.source_branch }}\`
+          - **元ブランチ:** \`${{ github.ref_name }}\`
           - **リリースブランチ:** \`${{ inputs.release_branch }}\`
           - **作成者:** @${{ github.actor }}
           - **実行ワークフロー:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
